@@ -23,6 +23,10 @@ public class Client {
     @Column(name = "address")
     private String address;
 
+    @Column(name = "client_type")
+    private String clientType;
+
+
 
 
     // Constructors
@@ -30,11 +34,13 @@ public class Client {
         // Default constructor required by JPA
     }
 
-    public Client(String name, String email, String phone, String address) {
+    public Client(String name, String email, String phone, String address , String clientType) {
         this.name = name;
         this.email = email;
         this.phone = phone;
         this.address = address;
+        this.clientType = clientType;
+
     }
 
     // Getters and setters
@@ -77,6 +83,15 @@ public class Client {
     public void setAddress(String address) {
         this.address = address;
     }
+
+    public String getClientType() {
+        return clientType;
+    }
+
+    public void setClientType(String clientType) {
+        this.clientType = clientType;
+    }
+
 
 
 }
