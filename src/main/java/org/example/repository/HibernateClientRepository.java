@@ -2,75 +2,86 @@ package org.example.repository;
 
 import org.example.model.Client;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.List;
 
 public class HibernateClientRepository {
-    private EntityManager em;
-    private EntityTransaction tr;
+    private EntityManager entityManager;
 
 
     public HibernateClientRepository() {
-
-
-        this.em=HibernateUtility.getEntityManger();
-        tr=em.getTransaction();
+        this.entityManager = HibernateUtility.getEntityManger();
     }
 
-    public void save(Client cli) {
-        // TODO Auto-generated method stub
-        try {
-            tr.begin();
-            em.persist(cli);
-            tr.commit();
-
+    public void save(Client client) {
+       /* try (Session session = entityManager.unwrap(Session.class)) {
+            Transaction transaction = session.beginTransaction();
+            session.persist(client);
+            transaction.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch(Exception e) {
-            tr.rollback();
-            System.out.println(e);
-
-        }
+        */
+        entityManager.getTransaction().begin();
+        entityManager.persist(client);
+        entityManager.getTransaction().commit();
     }
 
-    public void delete(Client cli) {
-        // TODO Auto-generated method stub
-        try {
-            tr.begin();
-            Client entity = em.find(Client.class,cli);
-            if (entity != null) { // vérifier que l'objet existe
-                em.remove(entity);
+    public void delete(Client client) {
+        try (Session session = entityManager.unwrap(Session.class)) {
+            Transaction transaction = session.beginTransaction();
+            Client entity = session.find(Client.class, client.getId());
+            if (entity != null) {
+                session.remove(entity);
             }
-            tr.commit();
-
+            transaction.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch(Exception e) {
-            tr.rollback();
-            System.out.println(e);
-        }
-
     }
 
     public List<Client> getAll() {
-        // TODO Auto-generated method stub
-        Query query= em.createQuery("from Client");
+        TypedQuery<Client> query = entityManager.createQuery("from Client", Client.class);
         return query.getResultList();
     }
 
     public Client findById(int id) {
-        // TODO Auto-generated method stub
-        return em.find(Client.class, id);
+        return entityManager.find(Client.class, id);
     }
 
-    public Client findByName(String nom) {
-        TypedQuery<Client> query = em.createQuery("FROM Client WHERE client_nom = :nom", Client.class);
-        query.setParameter("nom", nom);
+    public Client findByName(String name) {
+        TypedQuery<Client> query = entityManager.createQuery("FROM Client WHERE name = :name", Client.class);
+        query.setParameter("name", name);
         try {
             return query.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
         } catch (NonUniqueResultException e) {
+            e.printStackTrace();
             return null;
         }
+    }
+
+    public List<Client> getAllClients() {
+        /*try (Session session = em.unwrap(Session.class)) {
+            TypedQuery<Client> query = session.createQuery("FROM Client", Client.class);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // Handle the error appropriately in your application
+        }
+         */
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Client> criteriaQuery = criteriaBuilder.createQuery(Client.class);
+        Root<Client> clientRoot = criteriaQuery.from(Client.class);
+        criteriaQuery.select(clientRoot);
+        Query query = entityManager.createQuery(criteriaQuery);
+        List<Client> clients = query.getResultList();
+        return clients;
     }
 }
